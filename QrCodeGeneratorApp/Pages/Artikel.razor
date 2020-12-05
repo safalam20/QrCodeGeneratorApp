@@ -1,0 +1,151 @@
+﻿@page "/artikel"
+
+@if (completionMessage is not null)
+{
+<div class="@messageClass" role="alert">
+    <h3 class="alert-heading font-italic">@completionMessage</h3>
+    <br />
+
+    @if (artikelPath != null)
+    {
+        <h5>Folge <span class="font-italic font-weight-bold">'@artikelPath'</span></h5>
+    }
+
+</div>
+}
+
+
+
+<EditForm Model="@artikelSearch" OnValidSubmit="HandleValidSubmit" class="manuSuche">
+    <DataAnnotationsValidator />
+
+    <div class="row justify-content-md-center ">
+        <div class="form-group col-md-3">
+            <InputText id="id" @bind-Value="artikelSearch.Artikelnummer" class="form-control" placeHolder="Artikelnummer*" />
+        </div>
+        <div class="form-group col-md-3">
+            <InputText id="id" @bind-Value="artikelSearch.LieferantId" class="form-control" placeHolder="LieferantId(optional)" />
+        </div>
+
+        <div class="form-group col-md-3">
+            <InputNumber id="year" @bind-Value="artikelSearch.Year" class="form-control" placeHolder="Jahr(optional)" />
+        </div>
+        <div class="form-group col-md-3">
+            <InputSelect @bind-Value="artikelSearch.Season" class="form-control">
+                <option value="">Jahreszeit Wählen(optional)</option>
+                <option value="S">Sommer</option>
+                <option value="W">Winter</option>
+            </InputSelect>
+        </div>
+    </div>
+
+    <div class="row justify-content-md-center mt-4">
+        <button type="submit" class="btn btn-primary btn-lg" disabled="@flag">Pdf Erstellen</button>
+    </div>
+    <ValidationSummary />
+</EditForm>
+
+
+
+@code{
+
+    ArtikelSearch artikelSearch = new ArtikelSearch();
+
+
+    [Inject]
+    public ITireRepository repository { get; set; }
+
+    [Inject]
+    public ArtikelGeneratorService generatorService { get; set; }
+
+    public bool flag = false;
+    public string completionMessage;
+    public string messageClass;
+    public string artikelPath;
+    public string errorMessage;
+
+
+    protected override void OnInitialized()
+    {
+        resetProperties();
+    }
+
+
+    private async Task HandleValidSubmit()
+    {
+        resetProperties();
+
+        flag = true;
+        completionMessage = "Bitte Warten Sie!";
+        updateUI();
+
+        System.Diagnostics.Debug.WriteLine(artikelSearch.Artikelnummer + "--" + artikelSearch.LieferantId+"---"+artikelSearch.Season+"---"+artikelSearch.Year);
+
+        if (artikelSearch.LieferantId is null || artikelSearch.LieferantId=="")
+        {
+
+            ArtikelDto artikel =await repository.GetByArtikel(artikelSearch.Artikelnummer);
+
+            if (artikel is not null)
+            {
+                System.Diagnostics.Debug.WriteLine("Lieferant empty!!");
+                System.Diagnostics.Debug.WriteLine(artikelSearch.LieferantId=="");
+
+                generatorService.handlePdfSave(artikel, artikelSearch, this);
+            }
+            else
+            {
+
+                messageClass = "alert alert-danger col-5";
+                completionMessage = "Artikel nicht gefunden!";
+                flag = false;
+
+            }
+        }
+        else
+        {
+            ArtikelDto artikel =await repository.GetByArtikel(artikelSearch.Artikelnummer, artikelSearch.LieferantId);
+
+            if (artikel != null)
+            {
+                System.Diagnostics.Debug.WriteLine("Lieferant is not empty!!!!");
+                generatorService.handlePdfSave(artikel, artikelSearch, this);
+            }
+            else
+            {
+                messageClass = "alert alert-danger col-5";
+                completionMessage = "Artikel nicht gefunden!";
+                flag = false;
+
+            }
+        }
+
+
+    }
+
+
+
+    public void updateUI()
+    {
+
+        InvokeAsync(() =>
+        {
+            StateHasChanged();
+        });
+    }
+
+    public void resetProperties()
+    {
+        completionMessage = null;
+        flag = false;
+        messageClass = "alert alert-info col-6";
+        artikelPath = null;
+        errorMessage = null;
+    }
+
+
+
+
+}
+
+

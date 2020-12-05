@@ -1,0 +1,132 @@
+﻿@page "/"
+
+@if (completionMessage is not null)
+{
+    <div class="@messageClass" role="alert">
+        <h3 class="alert-heading font-italic">@completionMessage</h3>
+        <br />
+        @if (allCount != 0)
+        {
+            <h5>@countCreated von @allCount Seiten erstellt!</h5>
+            
+            @if (pathIndex != null)
+            {
+                <h5>Folge <span class="font-italic font-weight-bold">'@pathIndex'</span></h5>
+            }
+        }
+
+    </div>
+}
+
+<EditForm Model="@manufacturerSearch" OnValidSubmit="HandleValidSubmit" class="manuSuche">
+    <DataAnnotationsValidator />
+
+    <div class="row justify-content-md-center ">
+        <div class="form-group col-md-4">
+            <InputText id="id" @bind-Value="manufacturerSearch.LieferantId" class="form-control" placeHolder="LieferantId*" />
+        </div>
+
+        <div class="form-group col-md-4">
+            <InputNumber id="year" @bind-Value="manufacturerSearch.Year" class="form-control" placeHolder="Jahr*" />
+        </div>
+        <div class="form-group col-md-4">
+            <InputSelect @bind-Value="manufacturerSearch.Season" class="form-control">
+                <option value="">Jahreszeit Wählen*</option>
+                <option value="S">Sommer</option>
+                <option value="W">Winter</option>
+            </InputSelect>
+        </div>
+    </div>
+
+    <div class="row justify-content-md-center mt-4">
+        <button type="submit" disabled="@flag" class="btn btn-primary btn-lg">Pdf Erstellen</button>
+    </div>
+    <ValidationSummary />
+</EditForm>
+
+@if (errorMessage is not null)
+{
+    <div class="alert alert-danger mt-5" role="alert">
+        @errorMessage
+    </div>
+
+}
+
+
+
+
+@code{
+    ManufacturerSearch manufacturerSearch = new ManufacturerSearch();
+
+    public int countCreated;
+    public int allCount;
+    public bool flag;
+    public string completionMessage;
+    public string messageClass;
+    public string pathIndex;
+    public string errorMessage;
+
+    [Inject]
+    public ITireRepository repository { get; set; }
+
+    [Inject]
+    public LiferantGeneratorService generatorService { get; set; }
+
+    protected override void OnInitialized()
+    {
+        resetProperties();
+    }
+
+    private async Task HandleValidSubmit()
+    {
+        resetProperties();
+
+        flag = true;
+        completionMessage = "Bitte Warten Sie!";
+        updateUI();
+
+        List<ArtikelDto> artikels = await repository.GetByLieferant(manufacturerSearch.LieferantId);
+
+        if (artikels.Count != 0)
+        {
+            Thread doWork = new Thread(() => generatorService.handlePdfSave(artikels, manufacturerSearch, this));
+            doWork.Start();
+        }
+        else
+        {
+            messageClass = "alert alert-danger col-5";
+            completionMessage = "Artikel nicht gefunden!";
+            flag = false;
+        }
+
+    }
+
+
+
+    public void updateUI()
+    {
+
+        InvokeAsync(() =>
+        {
+            StateHasChanged();
+        });
+    }
+
+
+    public void resetProperties()
+    {
+        completionMessage = null;
+        allCount = 0;
+        countCreated = 0;
+        flag = false;
+        messageClass = "alert alert-info col-5";
+        pathIndex = null;
+        errorMessage = null;
+    }
+
+
+}
+
+
+
+
