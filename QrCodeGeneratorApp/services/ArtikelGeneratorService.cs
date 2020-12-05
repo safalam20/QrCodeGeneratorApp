@@ -51,7 +51,7 @@ namespace QrCodeGeneratorApp.services
 
             artikelPage.flag = false;
             artikelPage.completionMessage = "Vollständig!";
-            artikelPage.messageClass = "alert alert-success col-5";
+            artikelPage.messageClass = "alert alert-success col-lg-6";
             artikelPage.updateUI();
 
         }

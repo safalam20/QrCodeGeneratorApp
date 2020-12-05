@@ -79,7 +79,7 @@
         completionMessage = "Bitte Warten Sie!";
         updateUI();
 
-        System.Diagnostics.Debug.WriteLine(artikelSearch.Artikelnummer + "--" + artikelSearch.LieferantId+"---"+artikelSearch.Season+"---"+artikelSearch.Year);
+        
 
         if (artikelSearch.LieferantId is null || artikelSearch.LieferantId=="")
         {
@@ -88,15 +88,13 @@
 
             if (artikel is not null)
             {
-                System.Diagnostics.Debug.WriteLine("Lieferant empty!!");
-                System.Diagnostics.Debug.WriteLine(artikelSearch.LieferantId=="");
-
+            
                 generatorService.handlePdfSave(artikel, artikelSearch, this);
             }
             else
             {
 
-                messageClass = "alert alert-danger col-5";
+                messageClass = "alert alert-danger col-lg-6";
                 completionMessage = "Artikel nicht gefunden!";
                 flag = false;
 
@@ -108,12 +106,12 @@
 
             if (artikel != null)
             {
-                System.Diagnostics.Debug.WriteLine("Lieferant is not empty!!!!");
+                
                 generatorService.handlePdfSave(artikel, artikelSearch, this);
             }
             else
             {
-                messageClass = "alert alert-danger col-5";
+                messageClass = "alert alert-danger col-lg-6";
                 completionMessage = "Artikel nicht gefunden!";
                 flag = false;
 
@@ -138,7 +136,7 @@
     {
         completionMessage = null;
         flag = false;
-        messageClass = "alert alert-info col-6";
+        messageClass = "alert alert-info col-lg-6";
         artikelPath = null;
         errorMessage = null;
     }
