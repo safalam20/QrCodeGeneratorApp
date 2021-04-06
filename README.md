@@ -1,0 +1,2 @@
+# QrCodeGeneratorApp
+Test
